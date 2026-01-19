@@ -93,7 +93,7 @@ export function SlidesEditor({}: SlidesEditorProps) {
             </Button>
           </div> */}
         </div>
-        <AIPanel />
+        {/* <AIPanel /> */}
       </div>
     </div>
   );

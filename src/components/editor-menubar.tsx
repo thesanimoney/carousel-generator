@@ -26,18 +26,95 @@ import FileInputForm from "./forms/file-input-form";
 import { useFieldsFileImporter } from "@/lib/hooks/use-fields-file-importer";
 import { usePagerContext } from "@/lib/providers/pager-context";
 import { defaultValues } from "@/lib/default-document";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { Textarea } from "./ui/textarea";
+import { Button } from "./ui/button";
+
+function ImportDialogContent({
+  field,
+  handleFileSubmission,
+  handleJsonPaste,
+  onClose,
+}: {
+  field: "config" | "slides";
+  handleFileSubmission: (files: FileList) => void;
+  handleJsonPaste: (json: any) => void;
+  onClose: () => void;
+}) {
+  const [jsonText, setJsonText] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const handlePasteSubmit = () => {
+    if (!jsonText.trim()) {
+      setError("Please paste some JSON content");
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(jsonText);
+      handleJsonPaste(parsed);
+      setError(null);
+      setJsonText("");
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Invalid JSON format");
+    }
+  };
+
+  return (
+    <Tabs defaultValue="paste" className="w-full">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="paste">Paste JSON</TabsTrigger>
+        <TabsTrigger value="file">Upload File</TabsTrigger>
+        
+      </TabsList>
+      <TabsContent value="file" className="space-y-4">
+        <FileInputForm
+          handleSubmit={(files) => {
+            handleFileSubmission(files);
+            onClose();
+          }}
+          label={field === "config" ? "Settings File" : "Content File"}
+          description="Select a json file to load"
+        />
+      </TabsContent>
+      <TabsContent value="paste" className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Paste JSON Content</label>
+          <Textarea
+            value={jsonText}
+            onChange={(e) => {
+              setJsonText(e.target.value);
+              setError(null);
+            }}
+            placeholder="Paste your JSON content here..."
+            className="min-h-[300px] font-mono text-sm"
+          />
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          <Button onClick={handlePasteSubmit} className="w-full">
+            Import JSON
+          </Button>
+        </div>
+      </TabsContent>
+    </Tabs>
+  );
+}
 
 export function EditorMenubar({}: {}) {
   const { reset, watch }: DocumentFormReturn = useFormContext(); // retrieve those props
   const { setCurrentPage } = usePagerContext();
 
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
-  const { handleFileSubmission: handleConfigFileSubmission } =
-    useFieldsFileImporter("config");
+  const {
+    handleFileSubmission: handleConfigFileSubmission,
+    handleJsonPaste: handleConfigJsonPaste,
+  } = useFieldsFileImporter("config");
   const [isContentDialogOpen, setIsContentDialogOpen] = useState(false);
 
-  const { handleFileSubmission: handleContentFileSubmission } =
-    useFieldsFileImporter("slides");
+  const {
+    handleFileSubmission: handleContentFileSubmission,
+    handleJsonPaste: handleContentJsonPaste,
+  } = useFieldsFileImporter("slides");
 
   return (
     // TODO: Add Here download and help
@@ -65,18 +142,18 @@ export function EditorMenubar({}: {}) {
                   Import Settings
                 </MenubarItem>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>Load a file with Settings</DialogTitle>
+                  <DialogTitle>Load Settings</DialogTitle>
                 </DialogHeader>
-
-                <FileInputForm
-                  handleSubmit={(files) => {
-                    handleConfigFileSubmission(files);
+                <ImportDialogContent
+                  field="config"
+                  handleFileSubmission={handleConfigFileSubmission}
+                  handleJsonPaste={(json) => {
+                    handleConfigJsonPaste(json);
                     setIsConfigDialogOpen(false);
                   }}
-                  label={"Settings File"}
-                  description="Select a json file to load"
+                  onClose={() => setIsConfigDialogOpen(false)}
                 />
               </DialogContent>
             </Dialog>
@@ -96,18 +173,18 @@ export function EditorMenubar({}: {}) {
                   Import Content
                 </MenubarItem>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>Load a file with content</DialogTitle>
+                  <DialogTitle>Load Content</DialogTitle>
                 </DialogHeader>
-
-                <FileInputForm
-                  handleSubmit={(files) => {
-                    handleContentFileSubmission(files);
+                <ImportDialogContent
+                  field="slides"
+                  handleFileSubmission={handleContentFileSubmission}
+                  handleJsonPaste={(json) => {
+                    handleContentJsonPaste(json);
                     setIsContentDialogOpen(false);
                   }}
-                  label={"Content File"}
-                  description="Select a json file to load"
+                  onClose={() => setIsContentDialogOpen(false)}
                 />
               </DialogContent>
             </Dialog>

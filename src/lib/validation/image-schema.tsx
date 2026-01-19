@@ -33,7 +33,7 @@ const DEFAULT_IMAGE_SOURCE = {
 };
 
 export const ImageSourceSchema = z.object({
-  src: z.union([z.string().url(), ImageDataUrlSchema, z.literal("")]),
+  src: z.string(),
   type: ImageInputTypeSchema,
 });
 

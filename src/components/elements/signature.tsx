@@ -17,10 +17,10 @@ export function Signature({
         className
       )}`}
     >
-      {config.brand.avatar?.source.src && (
+      {true && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={config.brand.avatar.source.src}
+          src="/avatar.jpg"
           alt={config.brand.name}
           className={`w-12 h-12 rounded-full`}
           style={{
@@ -35,7 +35,7 @@ export function Signature({
             color: config.theme.primary,
           }}
         >
-          {config.brand.name}
+          {config.brand.name || "Alexander Stoliarchuk"}
         </p>
         <p
           className={cn(
@@ -46,7 +46,7 @@ export function Signature({
             color: config.theme.secondary,
           }}
         >
-          {config.brand.handle}
+          {config.brand.handle || "Scale delivery for IT companies"}
         </p>
       </div>
     </div>

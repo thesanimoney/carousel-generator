@@ -27,7 +27,11 @@ export function BrandForm({}: {}) {
             <FormItem>
               <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input placeholder="Your name" className="" {...field} />
+                <Input
+                  placeholder={"Alexander Stoliarchuk"}
+                  className=""
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -40,7 +44,7 @@ export function BrandForm({}: {}) {
             <FormItem>
               <FormLabel>Handle</FormLabel>
               <FormControl>
-                <Input placeholder="Your handle" className="" {...field} />
+                <Input placeholder="Scale delivery for IT companies" className="" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

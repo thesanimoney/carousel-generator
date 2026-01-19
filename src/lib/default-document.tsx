@@ -3,7 +3,7 @@ import { MultiSlideSchema } from "@/lib/validation/slide-schema";
 import { SlideType } from "@/lib/validation/slide-schema";
 
 import { getDefaultSlideOfType } from "@/lib/default-slides";
-import { DEFAULT_IMAGE_INPUT } from "@/lib/validation/image-schema";
+import { DEFAULT_IMAGE_INPUT, ImageSchema, ImageInputType } from "@/lib/validation/image-schema";
 
 const defaultSlideValues: z.infer<typeof MultiSlideSchema> = [
   getDefaultSlideOfType(SlideType.enum.Intro),
@@ -17,10 +17,19 @@ export const defaultValues = {
   slides: defaultSlideValues,
   config: {
     brand: {
-      avatar: DEFAULT_IMAGE_INPUT,
+      avatar: ImageSchema.parse({
+        type: "Image",
+        source: {
+          src: "/avatar.jpg",
+          type: ImageInputType.Url,
+        },
+        style: {
+          opacity: 100,
+        },
+      }),
 
-      name: "My name",
-      handle: "@name",
+      name: "Alexander Stoliarchuk",
+      handle: "Scale delivery for IT companies",
     },
     theme: {
       isCustom: false,

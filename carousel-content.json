@@ -1,0 +1,22 @@
+[
+  {
+    "elements": [
+      {
+        "type": "Title",
+        "text": "Project Management Is Not About Gantt Charts",
+        "style": {
+          "fontSize": "Medium",
+          "align": "Center"
+        }
+      },
+      {
+        "type": "Description",
+        "text": "Real project management is about ownership, clarity, and decision-making — not timelines and status reports.",
+        "style": {
+          "fontSize": "Medium",
+          "align": "Center"
+        }
+      }
+    ]
+  }
+]

@@ -109,6 +109,19 @@ export function useComponentPrinter() {
   const [isPrinting, setIsPrinting] = React.useState(false);
   // TODO: Show animation on loading
   const componentRef = React.useRef(null);
+  
+  // Count only non-empty slides (slides with at least one element that has text)
+  const getValidSlideCount = React.useCallback(() => {
+    const slides = watch("slides");
+    if (!Array.isArray(slides)) return 0;
+    
+    return slides.filter((slide: any) => {
+      if (!slide?.elements || !Array.isArray(slide.elements)) return false;
+      return slide.elements.some((el: any) => {
+        return el?.text && typeof el.text === 'string' && el.text.trim().length > 0;
+      });
+    }).length;
+  }, [watch]);
 
   // Packages and references
   // react-to-print: https://github.com/gregnb/react-to-print
@@ -131,10 +144,25 @@ export function useComponentPrinter() {
       removeAllById(clone, "add-element-");
       removeAllById(clone, "element-menubar-");
       removeAllById(clone, "slide-menubar-");
+      removeEmptySlides(clone);
+      
+      // Remove padding from the main container (CarouselContent has 48px top + 48px bottom)
+      // This padding causes extra height that creates an extra page with 10+ slides
+      const mainContainer = clone.querySelector('#element-to-download-as-pdf') as HTMLElement;
+      if (mainContainer) {
+        mainContainer.style.paddingTop = '0';
+        mainContainer.style.paddingBottom = '0';
+        // Also remove any gap that might add height in vertical layout
+        mainContainer.style.gap = '0';
+      }
+      
       insertFonts(clone);
-      // Remove styling from container
+      // Remove styling from container and ensure no gap
       clone.className = "flex flex-col";
       clone.style = {};
+      if (clone instanceof HTMLElement) {
+        clone.style.gap = '0';
+      }
 
       return clone;
     }
@@ -162,16 +190,34 @@ export function useComponentPrinter() {
       }
 
       const SCALE_TO_LINKEDIN_INTRINSIC_SIZE = 1.8;
+      // Count only valid (non-empty) slides for PDF generation
+      const validSlideCount = getValidSlideCount();
+      
+      // Account for padding that was removed (48px top + 48px bottom = 96px)
+      // This prevents extra page with 10+ slides due to accumulated spacing
+      const PADDING_REMOVED = 96;
+      const calculatedHeight = SIZE.height * validSlideCount;
+      // Subtract the padding we removed to get accurate height
+      const adjustedHeight = Math.max(0, calculatedHeight - PADDING_REMOVED);
+      
+      console.log('PDF Export:', {
+        totalSlides: numPages,
+        validSlides: validSlideCount,
+        calculatedHeight,
+        adjustedHeight,
+        paddingRemoved: PADDING_REMOVED
+      });
+      
       // const fontEmbedCss = await getFontEmbedCSS(html);
       const options: HtmlToPdfOptions = {
         margin: [0, 0, 0, 0],
         filename: watch("filename"),
         image: { type: "webp", quality: 0.98 },
         htmlToImage: {
-          height: SIZE.height * numPages,
+          height: adjustedHeight,
           width: SIZE.width,
           canvasHeight:
-            SIZE.height * numPages * SCALE_TO_LINKEDIN_INTRINSIC_SIZE,
+            adjustedHeight * SCALE_TO_LINKEDIN_INTRINSIC_SIZE,
           canvasWidth: SIZE.width * SCALE_TO_LINKEDIN_INTRINSIC_SIZE,
         },
         jsPDF: { unit: "px", format: [SIZE.width, SIZE.height] },
@@ -253,6 +299,34 @@ function removeClassnames(element: HTMLDivElement, classNames: string): string {
     .split(" ")
     .filter((el) => !classNames.split(" ").includes(el))
     .join(" ");
+}
+
+function removeEmptySlides(html: HTMLElement) {
+  // Find all carousel items (slides) by their id pattern
+  const carouselItems = Array.from(
+    html.querySelectorAll('[id^="carousel-item-"]')
+  ) as HTMLElement[];
+  
+  carouselItems.forEach((item) => {
+    // Check if this slide has any text content in textareas
+    const textareas = Array.from(
+      item.querySelectorAll('textarea')
+    ) as HTMLTextAreaElement[];
+    
+    // Check if slide has any non-empty text content
+    const hasContent = textareas.some((textarea) => {
+      const text = textarea.value || textarea.textContent || '';
+      return text.trim().length > 0;
+    });
+    
+    // Also check for images as content
+    const hasImages = item.querySelectorAll('img').length > 0;
+    
+    // If slide has no content, remove it
+    if (!hasContent && !hasImages) {
+      item.remove();
+    }
+  });
 }
 
 function insertFonts(element: HTMLElement) {
