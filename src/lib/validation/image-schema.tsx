@@ -18,6 +18,8 @@ export const ImageStyleSchema = z.object({
 
 export const ContentImageStyleSchema = ImageStyleSchema.extend({
   objectFit: ObjectFitType.default(ObjectFitType.enum.Cover),
+  width: z.number().positive().optional(),
+  height: z.number().positive().optional(),
 });
 
 export enum ImageInputType {
