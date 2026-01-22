@@ -74,8 +74,8 @@ export function ContentImage({
     if (resizeHandle.includes('s')) newHeight = Math.max(50, startPosRef.current.height + deltaY);
     if (resizeHandle.includes('n')) newHeight = Math.max(50, startPosRef.current.height - deltaY);
 
-    setValue(`${fieldName}.style.width`, newWidth);
-    setValue(`${fieldName}.style.height`, newHeight);
+    setValue(`${fieldName}.style.width` as any, newWidth);
+    setValue(`${fieldName}.style.height` as any, newHeight);
   }, [isResizing, resizeHandle, fieldName, setValue]);
 
   const handleMouseUp = useCallback(() => {
