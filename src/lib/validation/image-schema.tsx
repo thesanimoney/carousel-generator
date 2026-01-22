@@ -23,13 +23,14 @@ export const ContentImageStyleSchema = ImageStyleSchema.extend({
 export enum ImageInputType {
   Url = "URL",
   Upload = "UPLOAD",
+  Paste = "PASTE",
   Generated = "GENERATED",
 }
 const ImageInputTypeSchema = z.nativeEnum(ImageInputType);
 
 const DEFAULT_IMAGE_SOURCE = {
   src: "",
-  type: ImageInputType.Url,
+  type: ImageInputType.Paste,
 };
 
 export const ImageSourceSchema = z.object({
