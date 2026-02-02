@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "edge"; // 'nodejs' is the default
 
+export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get("origin") ?? "*";
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Methods": "GET,OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+      Vary: "Origin",
+    },
+  });
+}
+
 export async function GET(request: NextRequest) {
   try {
     let url = new URL(request.url);
@@ -10,7 +23,7 @@ export async function GET(request: NextRequest) {
     if (!imageUrl) {
       return new NextResponse("URL Not provided", { status: 500 });
     }
-    const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+    const origin = request.headers.get("origin") ?? "*";
 
     // Make a GET request to the external URL
     const { contentType, body } = await fetchExternalImageUrl(imageUrl);
@@ -23,7 +36,9 @@ export async function GET(request: NextRequest) {
     }
 
     const headers = new Headers();
-    headers.set("Access-Control-Allow-Origin", siteUrl);
+    // Reflect origin (previews/prod) to avoid CORS mismatch
+    headers.set("Access-Control-Allow-Origin", origin);
+    headers.set("Vary", "Origin");
     headers.set("Content-Type", contentType);
     // Return the response as-is
     return new NextResponse(body, {

@@ -250,18 +250,32 @@ function proxyImgSources(html: HTMLElement) {
   const images = Array.from(
     html.getElementsByTagName("img")
   ) as HTMLImageElement[];
-  const url = process.env.NEXT_PUBLIC_APP_URL;
 
   const externalImages = images.filter(
-    (image) => !image.src.startsWith("/") && !image.src.startsWith("data:")
+    (image) => {
+      // Only proxy external images (not relative paths or data URLs)
+      const src = image.src;
+      return src && 
+             !src.startsWith("/") && 
+             !src.startsWith("data:") &&
+             !src.startsWith("blob:") &&
+             // Check if it's a valid URL
+             (src.startsWith("http://") || src.startsWith("https://"));
+    }
   );
 
   // TODO: Make a single request with the list of images
   externalImages.forEach((image) => {
-    const apiRequestURL = new URL(`${url}/api/proxy`);
-    apiRequestURL.searchParams.set("url", image.src);
-    // TODO: Consider using the cache of fetch
-    image.src = apiRequestURL.toString();
+    try {
+      // Always proxy through the current origin (works on Vercel previews too)
+      const apiRequestURL = new URL("/api/proxy", window.location.origin);
+      apiRequestURL.searchParams.set("url", image.src);
+      // TODO: Consider using the cache of fetch
+      image.src = apiRequestURL.toString();
+    } catch (error) {
+      console.error("Failed to proxy image URL:", image.src, error);
+      // Keep the original src if proxying fails
+    }
   });
 }
 
